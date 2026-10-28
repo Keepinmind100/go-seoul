@@ -1,0 +1,15 @@
+# .env.local 값으로 빌드·실행한다:
+#   docker compose --env-file .env.local up -d --build
+services:
+  goseoul:
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:?.env.local 에 NEXT_PUBLIC_SUPABASE_URL 이 필요합니다}
+        NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:?.env.local 에 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY 가 필요합니다}
+    image: goseoul:latest
+    environment:
+      MOLIT_SERVICE_KEY: ${MOLIT_SERVICE_KEY:-}
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
