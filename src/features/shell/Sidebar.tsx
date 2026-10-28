@@ -28,10 +28,11 @@ export function Sidebar() {
   const allOpen = closedGroups.length === 0;
   return (
     <>
-      <div aria-hidden className="fixed inset-0 top-14 z-20 bg-giwa/40 md:hidden" onClick={toggleSidebar} />
+      <div aria-hidden className="fixed inset-0 top-14 z-20 bg-giwa/40 transition-opacity duration-200 starting:opacity-0 md:hidden" onClick={toggleSidebar} />
+      {/* 폰에서는 왼쪽에서 서랍처럼 밀려 나온다. 넓은 화면에서는 늘 그 자리에 있으므로 움직이지 않는다 */}
       <nav
         aria-label="메뉴"
-        className="fixed bottom-0 left-0 top-14 z-30 flex w-60 shrink-0 flex-col gap-1 overflow-y-auto border-r bg-white px-3 py-3 text-sm shadow-pop md:static md:z-auto md:shadow-none"
+        className="fixed bottom-0 left-0 top-14 z-30 flex w-60 shrink-0 flex-col gap-1 overflow-y-auto border-r bg-white px-3 py-3 text-sm shadow-pop max-md:transition-transform max-md:duration-300 max-md:ease-drawer max-md:starting:-translate-x-full md:static md:z-auto md:shadow-none"
       >
         <div className="flex items-center justify-between px-2 pb-1">
           <span />
@@ -57,7 +58,7 @@ export function Sidebar() {
                 className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-[13px] font-semibold text-slate-500 hover:bg-slate-50 hover:text-slate-800"
               >
                 {g.label}
-                <Icon name="chevron" className={`h-3.5 w-3.5 transition-transform ${isOpen ? "rotate-90" : ""}`} />
+                <Icon name="chevron" className={`h-3.5 w-3.5 transition-transform duration-200 ease-out-strong ${isOpen ? "rotate-90" : ""}`} />
               </button>
               {isOpen && (
                 <ul className="mb-1 flex flex-col gap-0.5">
@@ -82,7 +83,7 @@ function MenuItem({ href, selected, onOpen }: { href: TabHref; selected: boolean
       type="button"
       onClick={() => onOpen(href)}
       aria-current={selected ? "page" : undefined}
-      className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition-colors ${
+      className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition-[color,background-color,transform] duration-150 ease-out-strong active:scale-[0.98] ${
         selected ? "bg-brand-50 font-semibold text-brand-700" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
       }`}
     >

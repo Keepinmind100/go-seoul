@@ -31,6 +31,10 @@
   --shadow-card: 0 1px 2px rgb(46 52 56 / 0.05), 0 1px 3px rgb(46 52 56 / 0.07);
   --shadow-pop: 0 12px 32px -12px rgb(46 52 56 / 0.3);
 
+  /* 움직임: 들어오고 눌릴 때는 빠르게 시작하는 ease-out-strong, 서랍은 iOS 서랍 곡선 */
+  --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+
   --font-sans: var(--font-plex), "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
   --font-display: var(--font-hahmlet), var(--font-plex), serif;
 }

@@ -9,6 +9,10 @@ import { useMenuStore } from "@/features/shell/menuStore";
 import { useTabStore } from "@/features/shell/tabStore";
 import { Icon } from "./icons";
 
+/** 어두운 헤더 띠 위의 아이콘 버튼 */
+const ICON_BUTTON =
+  "rounded-lg p-2 text-on-color/70 transition-[color,background-color,transform] duration-150 ease-out-strong hover:bg-on-color/10 hover:text-on-color active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-on-color/40";
+
 export function AppHeader() {
   const router = useRouter();
   const qc = useQueryClient();
@@ -36,7 +40,7 @@ export function AppHeader() {
         onClick={toggleSidebar}
         aria-label={isClient && sidebarCollapsed ? "메뉴 펼치기" : "메뉴 접기"}
         title={isClient && sidebarCollapsed ? "메뉴 펼치기" : "메뉴 접기"}
-        className="rounded-lg p-2 text-on-color/70 hover:bg-on-color/10 hover:text-on-color focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-on-color/40"
+        className={ICON_BUTTON}
       >
         <Icon name="menu" className="h-5 w-5" />
       </button>
@@ -52,7 +56,7 @@ export function AppHeader() {
         onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
         aria-label={theme === "dark" ? "라이트 모드로 전환" : "다크 모드로 전환"}
         title={theme === "dark" ? "라이트 모드로 전환" : "다크 모드로 전환"}
-        className="rounded-lg p-2 text-on-color/70 hover:bg-on-color/10 hover:text-on-color focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-on-color/40"
+        className={ICON_BUTTON}
       >
         <Icon name={isClient && theme === "dark" ? "sun" : "moon"} className="h-5 w-5" />
       </button>
@@ -62,7 +66,7 @@ export function AppHeader() {
         </span>
         {email ?? "…"}
       </span>
-      <button type="button" onClick={logout} aria-label="로그아웃" title="로그아웃" className="rounded-lg p-2 text-on-color/70 hover:bg-on-color/10 hover:text-on-color focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-on-color/40">
+      <button type="button" onClick={logout} aria-label="로그아웃" title="로그아웃" className={ICON_BUTTON}>
         <Icon name="logout" className="h-5 w-5" />
       </button>
     </header>

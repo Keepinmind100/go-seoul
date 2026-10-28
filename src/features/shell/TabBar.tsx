@@ -2,6 +2,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { Icon } from "@/components/icons";
 import { useIsClient } from "@/lib/client/useIsClient";
 import { MAX_TABS, menuLabel } from "./tabs";
 import { useTabStore } from "./tabStore";
@@ -32,8 +33,8 @@ export function TabBar() {
               <button type="button" role="tab" aria-selected={selected} onClick={() => open(href)} className="whitespace-nowrap">
                 {menuLabel(href)}
               </button>
-              <button type="button" aria-label={`${menuLabel(href)} 닫기`} onClick={() => close(href)} className="ml-0.5 rounded-md px-1.5 text-xs text-slate-400 hover:bg-slate-200 hover:text-slate-800">
-                ✕
+              <button type="button" aria-label={`${menuLabel(href)} 닫기`} onClick={() => close(href)} className="ml-0.5 grid h-5 w-5 place-items-center rounded-md text-slate-400 transition-[color,background-color] duration-150 hover:bg-slate-200 hover:text-slate-800">
+                <Icon name="x" className="h-3 w-3" />
               </button>
             </div>
           );
@@ -46,7 +47,10 @@ export function TabBar() {
         모두 닫기
       </button>
       {notice && (
-        <div role="alert" className="absolute right-3 top-12 z-40 rounded-lg bg-amber-500 px-3 py-2 text-sm text-on-color shadow-pop">
+        <div
+          role="alert"
+          className="absolute right-3 top-12 z-40 rounded-lg bg-amber-500 px-3 py-2 text-sm text-on-color shadow-pop transition-[opacity,transform] duration-200 ease-out-strong starting:-translate-y-1 starting:opacity-0"
+        >
           {notice}
         </div>
       )}

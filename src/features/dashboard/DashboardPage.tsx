@@ -97,10 +97,11 @@ export function DashboardPage() {
 
 function Summary({ label, value, unit, onClick }: { label: string; value: number | string; unit: string; onClick: () => void }) {
   return (
-    <button type="button" onClick={onClick} className="flex items-baseline justify-between gap-3 py-3 text-left hover:text-brand-700">
-      <dt className="text-sm text-slate-500">{label}</dt>
+    <button type="button" onClick={onClick} className="group flex items-baseline justify-between gap-3 py-3 text-left">
+      {/* 숫자까지 함께 초록으로 바뀌어야 누를 수 있는 줄이라는 걸 알 수 있다 */}
+      <dt className="text-sm text-slate-500 transition-colors group-hover:text-brand-700">{label}</dt>
       <dd className="flex items-baseline gap-1">
-        <span className="text-2xl font-semibold tabular-nums tracking-tight text-slate-900">{value}</span>
+        <span className="text-2xl font-semibold tabular-nums tracking-tight text-slate-900 transition-colors group-hover:text-brand-700">{value}</span>
         <span className="text-sm text-slate-500">{unit}</span>
       </dd>
     </button>
@@ -111,9 +112,9 @@ function CardHead({ title, action, onClick }: { title: string; action: string; o
   return (
     <div className="flex items-center justify-between border-b px-5 py-3">
       <h2 className="font-bold text-slate-900">{title}</h2>
-      <button type="button" onClick={onClick} className="flex items-center gap-0.5 text-sm text-brand-700 hover:underline">
+      <button type="button" onClick={onClick} className="group flex items-center gap-0.5 text-sm text-brand-700 hover:underline">
         {action}
-        <Icon name="chevron" className="h-3.5 w-3.5" />
+        <Icon name="chevron" className="h-3.5 w-3.5 transition-transform duration-150 ease-out-strong group-hover:translate-x-0.5" />
       </button>
     </div>
   );
