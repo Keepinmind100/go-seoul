@@ -27,8 +27,9 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="grid flex-1 place-items-center px-4">
-      <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-7 shadow-pop">
+    // 하루에 한 번 볼까 말까 한 화면이라 카드가 살짝 떠오르며 나타나도 된다. 위쪽에 남산초록 빛을 옅게 깐다
+    <div className="grid flex-1 place-items-center bg-[radial-gradient(56rem_32rem_at_50%_-8%,var(--color-brand-100),transparent_70%)] px-4">
+      <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-7 shadow-pop transition-[opacity,transform] duration-500 ease-out-strong starting:translate-y-2 starting:opacity-0">
         <div className="mb-6 flex items-center gap-2.5">
           <span className="grid h-10 w-10 place-items-center rounded-md bg-brand-600 text-on-color">
             <Icon name="building" className="h-5 w-5" />

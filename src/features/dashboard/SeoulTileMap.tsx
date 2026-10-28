@@ -33,7 +33,7 @@ export function SeoulTileMap({ favorites, visits, onPick }: { favorites: Map<str
               role="listitem"
               onClick={() => onPick(d)}
               title={`${d}: 관심 단지 ${n}곳${visited ? ", 임장함" : ""}`}
-              className={`relative flex aspect-[4/3] flex-col items-center justify-center rounded-md border text-[13px] font-medium transition-colors hover:border-brand-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50 ${FILL[Math.min(n, 3)]}`}
+              className={`relative flex aspect-[4/3] flex-col items-center justify-center rounded-md border text-[13px] font-medium transition-[color,background-color,border-color,transform] duration-150 ease-out-strong hover:border-brand-500 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50 ${FILL[Math.min(n, 3)]}`}
             >
               {d.replace(/구$/, "")}
               {n > 0 && <span className="text-[11px] tabular-nums opacity-80">{n}곳</span>}

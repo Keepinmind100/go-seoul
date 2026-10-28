@@ -51,3 +51,6 @@ next-env.d.ts
 
 # oh-my-claudecode local state
 /.omc
+
+# playwright mcp screenshots
+/.playwright-mcp

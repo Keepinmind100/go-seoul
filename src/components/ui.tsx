@@ -2,6 +2,7 @@
 "use client";
 
 import { useEffect, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from "react";
+import { Icon } from "./icons";
 
 type Variant = "primary" | "secondary" | "danger" | "ghost";
 const variants: Record<Variant, string> = {
@@ -15,7 +16,7 @@ export function Button({ variant = "secondary", className = "", ...props }: Butt
   return (
     <button
       type="button"
-      className={`inline-flex h-9 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-3.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40 disabled:cursor-not-allowed ${variants[variant]} ${className}`}
+      className={`inline-flex h-9 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-3.5 text-sm font-medium transition-[color,background-color,border-color,box-shadow,transform] duration-150 ease-out-strong enabled:active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40 disabled:cursor-not-allowed ${variants[variant]} ${className}`}
       {...props}
     />
   );
@@ -82,18 +83,27 @@ export function Modal({
   }, [open, onClose]);
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-950/50 p-4 backdrop-blur-[2px]" onMouseDown={onClose}>
+    // 모달은 버튼에 붙은 팝오버가 아니므로 가운데에서 살짝 커지며 나타난다(@starting-style)
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-gray-950/50 p-4 backdrop-blur-[2px] transition-opacity duration-200 ease-out starting:opacity-0"
+      onMouseDown={onClose}
+    >
       <div
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className={`flex max-h-[90vh] w-full ${width} flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-pop`}
+        className={`flex max-h-[90vh] w-full ${width} flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-pop transition-[opacity,transform] duration-200 ease-out-strong starting:scale-[0.96] starting:opacity-0`}
         onMouseDown={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b px-5 py-4">
           <h2 className="text-lg font-bold text-slate-900">{title}</h2>
-          <button type="button" aria-label="닫기" className="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700" onClick={onClose}>
-            ✕
+          <button
+            type="button"
+            aria-label="닫기"
+            className="rounded-md p-1.5 text-slate-400 transition-[color,background-color,transform] duration-150 ease-out-strong hover:bg-slate-100 hover:text-slate-700 active:scale-90"
+            onClick={onClose}
+          >
+            <Icon name="x" className="h-4 w-4" />
           </button>
         </div>
         <div className="overflow-auto px-5 py-5">{children}</div>
