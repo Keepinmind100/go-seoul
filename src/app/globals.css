@@ -1,0 +1,124 @@
+@import "tailwindcss";
+
+/* 다크 모드는 <html class="dark"> 로 켠다 */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * 디자인 기준(토큰) — 서울 상징색에서 가져왔다
+ * - brand: 남산초록. 주요 버튼·선택 상태. 화면에서는 green 대신 brand-* 를 쓴다
+ * - ginkgo: 은행노랑. 별점과 임장 표시에만 쓴다
+ * - giwa: 기와진회색. 상단 헤더 띠
+ * - 배경은 한강은색, 중립색은 slate-* · white 를 쓰고 다크 모드에서 .dark 블록이 값만 바꿔 끼운다
+ */
+@theme {
+  --color-brand-50: #eef5f1;
+  --color-brand-100: #d7e8de;
+  --color-brand-200: #b0d1be;
+  --color-brand-300: #84b69a;
+  --color-brand-400: #57977a;
+  --color-brand-500: #3b7c5f;
+  --color-brand-600: #2f6b4f;
+  --color-brand-700: #265840;
+  --color-brand-800: #1e4533;
+  --color-brand-900: #163326;
+  --color-ginkgo-100: #fbefd2;
+  --color-ginkgo-400: #e3a72f;
+  --color-ginkgo-600: #b07d14;
+  --color-giwa: #2e3438;
+  --color-on-color: #ffffff;
+
+  --radius-card: 0.75rem;
+  --shadow-card: 0 1px 2px rgb(46 52 56 / 0.05), 0 1px 3px rgb(46 52 56 / 0.07);
+  --shadow-pop: 0 12px 32px -12px rgb(46 52 56 / 0.3);
+
+  --font-sans: var(--font-plex), "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  --font-display: var(--font-hahmlet), var(--font-plex), serif;
+}
+
+:root {
+  --background: #eef1f2;
+  --foreground: #22292d;
+  color-scheme: light;
+}
+
+/* 다크 모드: 중립색 단계를 뒤집고, 옅은 경고·성공 배경은 어두운 톤으로 바꾼다 */
+.dark {
+  --background: #12171a;
+  --foreground: #e3e8ea;
+  color-scheme: dark;
+
+  --color-white: #1a2024;
+  --color-slate-50: #1f262b;
+  --color-slate-100: #252d33;
+  --color-slate-200: #303a41;
+  --color-slate-300: #424e56;
+  --color-slate-400: #66737c;
+  --color-slate-500: #94a1a9;
+  --color-slate-600: #aab5bc;
+  --color-slate-700: #cbd3d8;
+  --color-slate-800: #e3e8ea;
+  --color-slate-900: #f2f5f6;
+
+  --color-brand-50: #16261e;
+  --color-brand-100: #1b3126;
+  --color-brand-200: #275039;
+  --color-brand-700: #9ccbb2;
+  --color-brand-800: #c2e0cf;
+  --color-ginkgo-100: #3a2f14;
+  --color-ginkgo-600: #f0c45c;
+  --color-giwa: #0c1012;
+
+  --color-red-50: #2a1416;
+  --color-red-100: #3b1a1d;
+  --color-red-200: #5c2328;
+  --color-red-700: #fca5a5;
+  --color-amber-50: #2a2010;
+  --color-amber-100: #3a2c12;
+  --color-amber-200: #5a4317;
+  --color-amber-700: #fcd34d;
+  --color-amber-800: #fde68a;
+  --color-green-50: #102419;
+  --color-green-100: #14301f;
+  --color-green-200: #1d4a2f;
+  --color-green-700: #86efac;
+  --color-green-800: #bbf7d0;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2 {
+  font-family: var(--font-display);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* 기본 테두리색이 다크 모드에서도 따라오게 */
+*,
+::before,
+::after {
+  border-color: var(--color-slate-200);
+}
+
+/* 체크박스·라디오도 포인트색으로 */
+input[type="checkbox"],
+input[type="radio"] {
+  accent-color: var(--color-brand-600);
+}
