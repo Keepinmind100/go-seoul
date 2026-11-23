@@ -1,12 +1,9 @@
-// 단지별 연도 추이(서버 전용). 필요한 구·월을 DB 에 채운 뒤(store 와 같은 신선도 규칙) 단지 거래를 연도별로 묶는다.
+// 단지별 연도 추이(서버 전용, 읽기만). loader 가 DB 에 받아 둔 거래를 연도별로 묶는다. 아직 안 받은 달은 missingMonths 로 알린다.
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { fetchAptTrades } from "./aptTrade";
 import type { SeoulDistrict } from "./lawd";
-import { fromRow, isFresh, saveMonth, type TradeRow } from "./store";
+import { fromRow, type TradeRow } from "./store";
 import type { AptTrade, AptTrendResult, AptTrendYear } from "./types";
 
-/** 국토교통부에 동시에 보내는 요청 수 */
-const CONCURRENCY = 6;
 const PAGE = 1000;
 
 /** fromYear 1월 ~ toYear 12월(이번 달까지)의 YYYYMM 목록 */
@@ -17,27 +14,12 @@ export function yearMonths(fromYear: number, toYear: number, now = new Date()): 
   return out;
 }
 
-/** 아직 없거나 오래된 구·월만 국토교통부에서 받아 DB 에 넣는다 */
-async function ensureMonths(db: SupabaseClient, district: SeoulDistrict, yms: string[]) {
-  const { data, error } = await db.from("apt_trade_loads").select("ym, loaded_at").eq("district", district).in("ym", yms);
+/** 기간 안에서 loader 가 아직 받지 않은 구·월 */
+async function missingMonths(db: SupabaseClient, district: SeoulDistrict, yms: string[]): Promise<string[]> {
+  const { data, error } = await db.from("apt_trade_loads").select("ym").eq("district", district).in("ym", yms);
   if (error) throw new Error(`실거래가 DB 읽기 실패: ${error.message}`);
-  const loadedAt = new Map((data ?? []).map((r) => [r.ym as string, r.loaded_at as string]));
-  const todo = yms.filter((ym) => !isFresh(loadedAt.get(ym) ?? null, ym));
-
-  const failed: string[] = [];
-  let next = 0;
-  const worker = async () => {
-    while (next < todo.length) {
-      const ym = todo[next++];
-      try {
-        await saveMonth(db, district, ym, (await fetchAptTrades(district, ym, true)).items);
-      } catch {
-        failed.push(ym);
-      }
-    }
-  };
-  await Promise.all(Array.from({ length: Math.min(CONCURRENCY, todo.length) }, worker));
-  return { fetched: todo.length - failed.length, failed: failed.sort() };
+  const loaded = new Set((data ?? []).map((r) => r.ym as string));
+  return yms.filter((ym) => !loaded.has(ym));
 }
 
 /** 단지(aptSeq)의 연도별 평균·최고·최저 거래금액. area 를 주면 그 전용면적(반올림 ㎡)만 */
@@ -50,7 +32,7 @@ export async function aptTrend(
   area: number | null,
 ): Promise<AptTrendResult> {
   const yms = yearMonths(fromYear, toYear);
-  const { fetched, failed } = await ensureMonths(db, district, yms);
+  const missing = await missingMonths(db, district, yms);
 
   const rows: AptTrade[] = [];
   for (let from = 0; ; from += PAGE) {
@@ -98,7 +80,6 @@ export async function aptTrend(
     years,
     trades,
     areas: [...areaCount].map(([a, count]) => ({ area: a, count })).sort((a, b) => a.area - b.area),
-    fetchedMonths: fetched,
-    failedMonths: failed,
+    missingMonths: missing,
   };
 }

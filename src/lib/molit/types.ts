@@ -34,12 +34,10 @@ export interface AptTradeResult {
   detail: boolean;
   totalCount: number;
   items: AptTrade[];
-  /** db: 저장된 자료 · api: 방금 국토교통부에서 받음 */
-  source?: "db" | "api";
-  /** DB 에 받아 둔 시각 */
+  /** loader 가 이 구·월을 DB 에 받아 둔 시각. 아직 안 받았으면 null */
   loadedAt?: string | null;
-  /** DB 저장 실패 등 조회는 됐지만 알릴 것 */
-  warning?: string;
+  /** loaded: DB 에 있음 · not_loaded: loader 가 아직 받지 않음(items 는 빈 목록). 국토교통부에서 직접 받은 결과에는 없다 */
+  status?: "loaded" | "not_loaded";
 }
 
 /** 단지 한 해의 매매가 요약(해제 거래 제외) */
@@ -65,9 +63,7 @@ export interface AptTrendResult {
   trades: AptTrade[];
   /** 이 단지의 전용면적(반올림)별 거래 건수 */
   areas: { area: number; count: number }[];
-  /** 이번에 국토교통부에서 새로 받은 구·월 수 */
-  fetchedMonths: number;
-  /** 받지 못한 월 (YYYYMM) */
-  failedMonths: string[];
+  /** 기간 안에서 loader 가 아직 받지 않은 월 (YYYYMM) — 그 달 거래는 통계에 빠져 있다 */
+  missingMonths: string[];
 }
 
