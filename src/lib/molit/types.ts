@@ -71,3 +71,52 @@ export interface AptTrendResult {
   failedMonths: string[];
 }
 
+
+/** 한 구에서 DB 에 받아 둔 거래로 만든 단지(관심 단지 연결용) */
+export interface AptComplex {
+  aptSeq: string;
+  /** 가장 최근 거래의 단지명 */
+  aptName: string;
+  dong: string;
+  buildYear: number | null;
+  /** 받아 둔 기간의 거래 건수(해제 제외) */
+  tradeCount: number;
+  lastDealDate: string | null;
+  /** 거래된 전용면적(반올림 ㎡) */
+  areas: number[];
+}
+
+export interface AptComplexesResult {
+  district: string;
+  /** 단지 목록을 만든 기간(최근 개월 수) */
+  months: number;
+  items: AptComplex[];
+  failedMonths: string[];
+}
+
+/** 관심 단지 한 곳의 시세 요약(해제 거래 제외, 관심 면적이 있으면 그 면적만) */
+export interface FavoritePrice {
+  favoriteId: number;
+  lastDealDate: string | null;
+  lastPriceManwon: number | null;
+  lastAreaM2: number | null;
+  lastFloor: number | null;
+  /** 최근 12개월 */
+  recentCount: number;
+  recentAvg: number | null;
+  /** 평당가(만원/전용 3.3㎡) */
+  recentPerPyeong: number | null;
+  /** 그 전 12개월 */
+  prevCount: number;
+  prevPerPyeong: number | null;
+  /** 평당가 기준 전년 대비(%) */
+  changePct: number | null;
+}
+
+export interface FavoritePricesResult {
+  items: FavoritePrice[];
+  /** 이번에 국토교통부에서 새로 받은 구·월 수 */
+  fetchedMonths: number;
+  /** 받지 못한 구·월 ("마포구 202609") */
+  failedMonths: string[];
+}

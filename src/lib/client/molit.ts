@@ -2,7 +2,7 @@
 "use client";
 
 import { useMutation, useQueries, useQuery, useQueryClient, type UseQueryResult } from "@tanstack/react-query";
-import type { AptTrade, AptTradeResult, AptTrendResult } from "@/lib/molit/types";
+import type { AptComplexesResult, AptTrade, AptTradeResult, AptTrendResult, FavoritePricesResult } from "@/lib/molit/types";
 
 async function getJson<T>(url: string): Promise<T> {
   const res = await fetch(url);
@@ -104,6 +104,31 @@ export function useAptTrend(params: { district: string; aptSeq: string; from: nu
         })}`,
       ),
     enabled: !!params,
+    staleTime: 30 * 60_000,
+    retry: false,
+  });
+}
+
+/**
+ * 관심 단지 시세 요약. 키를 ["favorites", …] 아래에 둬서 관심 단지를 저장·삭제하면(invalidate ["favorites"]) 함께 다시 부른다.
+ * 처음에는 연결된 구의 24개월을 받아 채우느라 오래 걸릴 수 있다
+ */
+export function useFavoritePrices(enabled: boolean) {
+  return useQuery({
+    queryKey: ["favorites", "prices"],
+    queryFn: () => getJson<FavoritePricesResult>("/api/molit/favorite-prices"),
+    enabled,
+    staleTime: 30 * 60_000,
+    retry: false,
+  });
+}
+
+/** 구의 단지 목록(최근 12개월 거래 기준). 관심 단지에 실거래 단지를 연결할 때 쓴다 */
+export function useAptComplexes(district: string | null) {
+  return useQuery({
+    queryKey: ["molit", "complexes", district],
+    queryFn: () => getJson<AptComplexesResult>(`/api/molit/complexes?${new URLSearchParams({ district: district! })}`),
+    enabled: !!district,
     staleTime: 30 * 60_000,
     retry: false,
   });

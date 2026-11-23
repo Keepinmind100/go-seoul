@@ -6,7 +6,7 @@ import { useMemo, useState } from "react";
 import { DataGrid } from "@/components/DataGrid";
 import { Icon } from "@/components/icons";
 import { Button, Card, ErrorText, Field, Input, PageShell, Select } from "@/components/ui";
-import { SEOUL_DISTRICTS } from "@/lib/client/data";
+import { SEOUL_DISTRICTS, useFavorites, useSaveFavorite } from "@/lib/client/data";
 import { monthsBetween, useAptTrades, useRefreshAptTrades } from "@/lib/client/molit";
 import type { AptTrade } from "@/lib/molit/types";
 import { TRADE_COLUMNS } from "./columns";
@@ -73,8 +73,23 @@ export function TradesPage() {
   // 추이 탭은 단지 고유번호(aptSeq)로 찾는다(해마다 단지명이 조금씩 달라도 같은 단지)
   const trendApt = useMemo(() => {
     const t = aptValue ? rows.find((r) => r.raw.aptSeq?.trim()) : undefined;
-    return t ? { district: t.district, aptSeq: t.raw.aptSeq.trim(), aptName: t.aptName } : null;
+    return t ? { district: t.district, aptSeq: t.raw.aptSeq.trim(), aptName: t.aptName, address: [t.dong, t.jibun].filter(Boolean).join(" ") || null } : null;
   }, [aptValue, rows]);
+
+  // 고른 단지를 관심 단지로 등록한다(단지 일련번호까지 넣으므로 관심 단지 화면에서 바로 시세가 나온다)
+  const favorites = useFavorites();
+  const saveFavorite = useSaveFavorite();
+  const isFavorite = !!trendApt && (favorites.data ?? []).some((f) => f.apt_seq === trendApt.aptSeq);
+  const addFavorite = () => {
+    if (!trendApt) return;
+    // 같은 구에 같은 이름의 관심 단지가 이미 있으면(연결 전) 새로 만들지 않고 단지 일련번호만 채운다
+    const same = (favorites.data ?? []).find((f) => f.district === trendApt.district && f.name === trendApt.aptName);
+    saveFavorite.mutate(
+      same
+        ? { id: same.id, values: { name: same.name, district: same.district, address: same.address ?? trendApt.address, memo: same.memo, apt_seq: trendApt.aptSeq, area_m2: same.area_m2 } }
+        : { values: { name: trendApt.aptName, district: trendApt.district, address: trendApt.address, memo: null, apt_seq: trendApt.aptSeq, area_m2: null } },
+    );
+  };
 
   const allSelected = districts.length === SEOUL_DISTRICTS.length;
   const toggle = (d: string) => setDistricts((prev) => (prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d]));
@@ -133,6 +148,16 @@ export function TradesPage() {
               ))}
             </Select>
           </Field>
+          {trendApt && (
+            <Button
+              disabled={isFavorite || saveFavorite.isPending || favorites.isLoading}
+              onClick={addFavorite}
+              title={isFavorite ? "이미 관심 단지에 있습니다" : "이 단지를 관심 단지에 추가합니다(실거래 시세 연결 포함)"}
+            >
+              <Icon name="star" className="h-4 w-4" />
+              {isFavorite ? "관심 단지 ✓" : saveFavorite.isPending ? "추가 중…" : "관심 단지에 추가"}
+            </Button>
+          )}
           <div className="ml-auto flex items-center gap-3">
             <p className="text-right text-sm text-slate-500">
               {rangeError ? (
@@ -157,7 +182,7 @@ export function TradesPage() {
         </div>
       </Card>
       {result.warnings.length > 0 && <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">{result.warnings.join(" / ")}</p>}
-      <ErrorText error={refresh.error} />
+      <ErrorText error={refresh.error ?? saveFavorite.error} />
       {result.errors.length > 0 && <ErrorText error={new Error(result.errors.map((e) => `${e.label}: ${e.message}`).join(" / "))} />}
       <div role="tablist" aria-label="보기" className="flex gap-1 border-b border-slate-200">
         {(
