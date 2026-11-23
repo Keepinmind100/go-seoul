@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # 고서울 운영 이미지(라즈베리파이 arm64 · x86 공통). next.config.ts 의 output: "standalone" 결과만 담는다.
 #
 #   docker build \
@@ -14,7 +15,7 @@ ARG NODE_VERSION=24
 FROM node:${NODE_VERSION}-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN --mount=type=cache,target=/root/.npm npm ci --no-audit --no-fund
 
 # 2) 빌드
 FROM node:${NODE_VERSION}-alpine AS builder

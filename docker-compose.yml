@@ -1,15 +1,19 @@
-# .env.local 값으로 빌드·실행한다:
+# 라즈베리파이: CI 가 올린 이미지를 받아 실행한다(최초 1회 `docker login ghcr.io`, PAT 권한 read:packages)
+#   docker compose pull && docker compose up -d
+#   TAG=sha-1a2b3c4 docker compose up -d        # 특정 커밋으로 고정·롤백
+# 로컬에서 직접 빌드: .env.local 값으로 build arg 를 채운다
 #   docker compose --env-file .env.local up -d --build
 services:
   goseoul:
+    image: ghcr.io/keepinmind100/go-seoul:${TAG:-latest}
     build:
       context: .
       args:
-        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:?.env.local 에 NEXT_PUBLIC_SUPABASE_URL 이 필요합니다}
-        NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:?.env.local 에 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY 가 필요합니다}
-    image: goseoul:latest
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:-}
+        NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:-}
     environment:
       MOLIT_SERVICE_KEY: ${MOLIT_SERVICE_KEY:-}
     ports:
       - "3000:3000"
+    init: true
     restart: unless-stopped
