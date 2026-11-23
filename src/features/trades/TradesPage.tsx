@@ -4,10 +4,9 @@
 
 import { useMemo, useState } from "react";
 import { DataGrid } from "@/components/DataGrid";
-import { Icon } from "@/components/icons";
 import { Button, Card, ErrorText, Field, Input, PageShell, Select } from "@/components/ui";
 import { SEOUL_DISTRICTS } from "@/lib/client/data";
-import { monthsBetween, useAptTrades, useRefreshAptTrades } from "@/lib/client/molit";
+import { monthsBetween, useAptTrades } from "@/lib/client/molit";
 import type { AptTrade } from "@/lib/molit/types";
 import { TRADE_COLUMNS } from "./columns";
 import { TrendPanel } from "./TrendPanel";
@@ -38,17 +37,12 @@ export function TradesPage() {
   const selected = SEOUL_DISTRICTS.filter((d) => districts.includes(d));
   const months = monthsBetween(applied.from, applied.to);
   const result = useAptTrades(selected, months);
-  const refresh = useRefreshAptTrades();
-  const busy = result.isFetching || refresh.isPending;
+  const busy = result.isFetching;
 
   const draftMonths = monthsBetween(range.from, range.to).length;
   const rangeError = !range.from || !range.to ? "기간을 입력하세요" : !draftMonths ? "시작 월이 끝 월보다 늦습니다" : draftMonths > MAX_MONTHS ? `최대 ${MAX_MONTHS}개월까지 조회할 수 있습니다` : null;
-  // 조회: 저장된 자료(DB)를 먼저 쓴다. 새로 받기: 지금 조건을 국토교통부에서 다시 받아 DB 를 바꾼다
+  // 조회: loader 가 DB 에 받아 둔 자료를 읽는다(최근 몇 달은 매일 새벽에 다시 받는다)
   const search = () => setApplied(range);
-  const refetchFromApi = () => {
-    setApplied(range);
-    refresh.mutate(selected.flatMap((district) => monthsBetween(range.from, range.to).map((ym) => ({ district, ym }))));
-  };
 
   // 단지명 검색어로 먼저 거른다 → 단지 select 에는 검색어에 맞는 단지만 남는다
   const matched = useMemo(() => {
@@ -139,25 +133,23 @@ export function TradesPage() {
                 <span className="text-red-700">{rangeError}</span>
               ) : (
                 <>
-                  {refresh.isPending ? "국토교통부에서 받는 중 · " : result.isFetching && `불러오는 중 ${result.done}/${result.total} · `}
+                  {result.isFetching && `불러오는 중 ${result.done}/${result.total} · `}
                   {months.length ? `${ymLabel(months[0])}~${ymLabel(months[months.length - 1])}` : ""} · {rows.length - cancelled}건
                   {cancelled > 0 && ` (해제 ${cancelled}건 별도)`}
-                  {result.total > 0 && !busy && ` · 저장된 자료 ${result.fromDb}/${result.total}`}
                 </>
               )}
             </p>
-            <Button disabled={!!rangeError || !districts.length || busy} onClick={refetchFromApi} title="저장된 자료를 무시하고 국토교통부에서 다시 받아 저장합니다">
-              <Icon name="refresh" className={`h-4 w-4 ${refresh.isPending ? "animate-spin" : ""}`} />
-              새로 받기
-            </Button>
             <Button variant="primary" disabled={!!rangeError || !districts.length || busy} onClick={search}>
               조회
             </Button>
           </div>
         </div>
       </Card>
-      {result.warnings.length > 0 && <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">{result.warnings.join(" / ")}</p>}
-      <ErrorText error={refresh.error} />
+      {result.notLoaded > 0 && !busy && (
+        <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">
+          {result.notLoaded}개 구·월은 아직 받아 두지 않아 빠졌습니다. 자료는 매일 새벽 4시에 받으며, 과거 자료는 며칠에 걸쳐 차례로 채웁니다.
+        </p>
+      )}
       {result.errors.length > 0 && <ErrorText error={new Error(result.errors.map((e) => `${e.label}: ${e.message}`).join(" / "))} />}
       <div role="tablist" aria-label="보기" className="flex gap-1 border-b border-slate-200">
         {(

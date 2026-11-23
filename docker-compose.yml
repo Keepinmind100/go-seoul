@@ -1,5 +1,7 @@
 # .env.local 값으로 빌드·실행한다:
 #   docker compose --env-file .env.local up -d --build
+# 특정 구·월만 지금 다시 받기:
+#   docker compose --env-file .env.local run --rm loader --district 마포구 --ym 202609
 services:
   goseoul:
     build:
@@ -8,8 +10,21 @@ services:
         NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:?.env.local 에 NEXT_PUBLIC_SUPABASE_URL 이 필요합니다}
         NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:?.env.local 에 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY 가 필요합니다}
     image: goseoul:latest
-    environment:
-      MOLIT_SERVICE_KEY: ${MOLIT_SERVICE_KEY:-}
+    # 앱은 실거래가를 DB 에서 읽기만 한다. 국토교통부 키·secret key 는 넘기지 않는다
     ports:
       - "3000:3000"
+    restart: unless-stopped
+
+  # 실거래가 적재 배치: 매일 04:00(Asia/Seoul) 최근 3개월+이번 달을 다시 받고, 남은 예산으로 과거 달을 채운다
+  loader:
+    build:
+      context: .
+      target: loader
+    image: goseoul-loader:latest
+    environment:
+      SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:?.env.local 에 NEXT_PUBLIC_SUPABASE_URL 이 필요합니다}
+      SUPABASE_SECRET_KEY: ${SUPABASE_SECRET_KEY:?.env.local 에 SUPABASE_SECRET_KEY 가 필요합니다}
+      MOLIT_SERVICE_KEY: ${MOLIT_SERVICE_KEY:?.env.local 에 MOLIT_SERVICE_KEY 가 필요합니다}
+      MOLIT_DAILY_BUDGET: ${MOLIT_DAILY_BUDGET:-800}
+      LOAD_HOUR: ${LOAD_HOUR:-4}
     restart: unless-stopped

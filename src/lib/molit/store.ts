@@ -1,11 +1,11 @@
-// 실거래가 DB 캐시(Supabase apt_trades). 구·월 단위로 받은 기록(apt_trade_loads)을 보고 DB 와 API 중 어디서 읽을지 정한다.
+// 실거래가 저장소(Supabase apt_trades). 쓰기는 loader(배치, src/jobs/loadAptTrades.ts)만, 앱 API 는 읽기만 한다.
+// 구·월 단위로 받은 기록은 apt_trade_loads 에 있다(거래 0건인 달도 받은 것으로 남는다).
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { fetchAptTrades } from "./aptTrade";
 import type { SeoulDistrict } from "./lawd";
 import type { AptTrade, AptTradeResult } from "./types";
 
 /** 이 개월 수 안의 자료는 늦은 신고·계약 해제로 바뀔 수 있어 하루에 한 번 다시 받는다 */
-const RECENT_MONTHS = 3;
+export const RECENT_MONTHS = 3;
 const REFRESH_MS = 24 * 60 * 60 * 1000;
 /** Supabase(PostgREST) 한 번에 돌려주는 최대 행 수 */
 const PAGE = 1000;
@@ -15,7 +15,7 @@ export function monthsAgoOf(ym: string, now = new Date()): number {
   return now.getFullYear() * 12 + now.getMonth() + 1 - (Number(ym.slice(0, 4)) * 12 + Number(ym.slice(4)));
 }
 
-/** 받은 기록이 있고, 지난 자료이거나 하루 안에 받았으면 DB 에서 읽는다 */
+/** 받은 기록이 있고, 지난 자료이거나 하루 안에 받았으면 다시 받을 필요가 없다(loader 가 쓴다) */
 export function isFresh(loadedAt: string | null, ym: string, now = new Date()): boolean {
   if (!loadedAt) return false;
   if (monthsAgoOf(ym, now) > RECENT_MONTHS) return true;
@@ -90,26 +90,13 @@ export async function saveMonth(db: SupabaseClient, district: string, ym: string
   if (error) throw new Error(`DB 저장 실패: ${error.message}`);
 }
 
-/**
- * 구·월 실거래가를 돌려준다. DB 에 있고 새것이면 DB 에서, 아니면 API 로 받아 DB 를 바꿔 넣는다(상세 자료).
- * DB 를 못 쓰면(테이블 없음 등) API 결과를 그대로 돌려준다.
- */
-export async function getAptTrades(db: SupabaseClient, district: SeoulDistrict, ym: string, force = false): Promise<AptTradeResult> {
+/** 구·월 실거래가를 DB 에서 읽는다. 아직 적재되지 않은 구·월이면 빈 목록과 status: "not_loaded" */
+export async function readAptTrades(db: SupabaseClient, district: SeoulDistrict, ym: string): Promise<AptTradeResult> {
   const load = await db.from("apt_trade_loads").select("loaded_at").eq("district", district).eq("ym", ym).maybeSingle();
+  if (load.error) throw new Error(`실거래가 DB 읽기 실패: ${load.error.message}`);
   const loadedAt: string | null = load.data?.loaded_at ?? null;
+  if (!loadedAt) return { district, ym, detail: true, totalCount: 0, items: [], loadedAt: null, status: "not_loaded" };
 
-  if (!load.error && !force && isFresh(loadedAt, ym)) {
-    const items = await readRows(db, district, ym);
-    return { district, ym, detail: true, totalCount: items.length, items, source: "db", loadedAt };
-  }
-
-  const fetched = await fetchAptTrades(district, ym, true);
-  if (load.error) return { ...fetched, source: "api", loadedAt: null, warning: `DB 저장 안 됨: ${load.error.message}` };
-
-  try {
-    await saveMonth(db, district, ym, fetched.items);
-  } catch (e) {
-    return { ...fetched, source: "api", loadedAt: null, warning: (e as Error).message };
-  }
-  return { ...fetched, source: "api", loadedAt: new Date().toISOString() };
+  const items = await readRows(db, district, ym);
+  return { district, ym, detail: true, totalCount: items.length, items, loadedAt, status: "loaded" };
 }

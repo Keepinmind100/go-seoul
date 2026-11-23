@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // loader 번들(npm run build:loader)
+    "dist/**",
   ]),
 ]);
 

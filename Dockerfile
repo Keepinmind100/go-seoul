@@ -4,9 +4,12 @@
 #     --build-arg NEXT_PUBLIC_SUPABASE_URL=https://<project-ref>.supabase.co \
 #     --build-arg NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_... \
 #     -t goseoul .
-#   docker run -p 3000:3000 -e MOLIT_SERVICE_KEY=... goseoul
+#   docker run -p 3000:3000 goseoul
 #
-# NEXT_PUBLIC_* 는 빌드할 때 브라우저 JS 에 박히므로 build arg 로, MOLIT_SERVICE_KEY 는 서버에서만 읽으므로 실행할 때 넘긴다.
+# NEXT_PUBLIC_* 는 빌드할 때 브라우저 JS 에 박히므로 build arg 로 넘긴다.
+# 실거래가 적재는 loader 타깃(아래 4)이 따로 한다. MOLIT_SERVICE_KEY · SUPABASE_SECRET_KEY 는 loader 에만 실행할 때 넘긴다.
+#
+#   docker build --target loader -t goseoul-loader .
 
 ARG NODE_VERSION=24
 
@@ -49,3 +52,21 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
     CMD wget -qO /dev/null http://127.0.0.1:3000/login || exit 1
 CMD ["node", "server.js"]
+
+# 4) 실거래가 적재 배치(loader): src/jobs/loadAptTrades.ts 를 esbuild 로 한 파일에 묶어 node 만으로 돌린다(node_modules 없음)
+FROM node:${NODE_VERSION}-alpine AS loader-build
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+RUN npm run build:loader
+
+FROM node:${NODE_VERSION}-alpine AS loader
+WORKDIR /app
+ENV NODE_ENV=production \
+    TZ=Asia/Seoul
+# alpine 에는 시간대 자료가 없어 TZ 가 먹지 않는다
+RUN apk add --no-cache tzdata
+COPY --from=loader-build --chown=node:node /app/dist/loader.mjs ./loader.mjs
+USER node
+ENTRYPOINT ["node", "loader.mjs"]
+CMD ["--daemon"]

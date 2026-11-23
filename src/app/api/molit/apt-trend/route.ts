@@ -1,8 +1,7 @@
-// 단지별 연도 추이: GET /api/molit/apt-trend?district=송파구&aptSeq=11710-123&from=2017&to=2026[&area=84]
-// 기간 안의 구·월 자료가 DB 에 없으면 국토교통부에서 받아 채운 뒤 계산한다(처음 한 번은 오래 걸릴 수 있다).
+// 단지별 연도 추이(읽기 전용): GET /api/molit/apt-trend?district=송파구&aptSeq=11710-123&from=2017&to=2026[&area=84]
+// loader 가 DB 에 받아 둔 자료로만 계산한다. 아직 안 받은 달은 응답의 missingMonths 로 알린다.
 import { isSeoulDistrict } from "@/lib/molit/lawd";
 import { aptTrend } from "@/lib/molit/trend";
-import { OpenApiError } from "@/lib/molit/xml";
 import { serverSupabase } from "@/lib/supabase/server";
 
 /** 국토교통부 실거래가 자료가 있는 첫 해 */
@@ -26,9 +25,8 @@ export async function GET(request: Request) {
   if (area !== null && !Number.isFinite(area)) return Response.json({ error: "면적이 올바르지 않습니다" }, { status: 400 });
 
   try {
-    return Response.json(await aptTrend(await serverSupabase(), district, aptSeq, from, to, area));
+    return Response.json(await aptTrend(await serverSupabase(), district, aptSeq, from, to, area), { headers: { "Cache-Control": "private, max-age=300" } });
   } catch (e) {
-    if (e instanceof OpenApiError) return Response.json({ error: `${e.message} (${e.code})` }, { status: 502 });
     return Response.json({ error: (e as Error).message }, { status: 500 });
   }
 }

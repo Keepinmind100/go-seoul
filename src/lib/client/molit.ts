@@ -1,7 +1,7 @@
 // 국토교통부 실거래가 조회 훅. 서버(/api/molit/*)를 거쳐 받는다(서비스키는 서버에만 있다).
 "use client";
 
-import { useMutation, useQueries, useQuery, useQueryClient, type UseQueryResult } from "@tanstack/react-query";
+import { useQueries, useQuery, type UseQueryResult } from "@tanstack/react-query";
 import type { AptTrade, AptTradeResult, AptTrendResult } from "@/lib/molit/types";
 
 async function getJson<T>(url: string): Promise<T> {
@@ -20,10 +20,8 @@ export interface AptTradesState {
   isFetching: boolean;
   /** 실패한 구·월과 사유 */
   errors: { label: string; message: string }[];
-  /** DB 에 저장된 자료로 응답한 호출 수 */
-  fromDb: number;
-  /** DB 저장 실패 등 알림 */
-  warnings: string[];
+  /** loader 가 아직 받지 않은 구·월 수(그 구·월 거래는 빠져 있다) */
+  notLoaded: number;
 }
 
 /** "2026-04" ~ "2026-09" → ["202604", …, "202609"] (from > to 이면 빈 목록) */
@@ -39,20 +37,6 @@ export function monthsBetween(from: string, to: string): string[] {
   return out;
 }
 
-/** 지금 조건(구 × 월)을 국토교통부에서 새로 받아 DB 를 바꾸고, 화면 캐시도 그 결과로 바꾼다 */
-export function useRefreshAptTrades() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (pairs: { district: string; ym: string }[]) =>
-      Promise.all(
-        pairs.map(async ({ district, ym }) => {
-          const data = await getJson<AptTradeResult>(`/api/molit/apt-trades?${new URLSearchParams({ district, ym, refresh: "1" })}`);
-          qc.setQueryData(["molit", "apt-trades", district, ym], data);
-        }),
-      ),
-  });
-}
-
 /**
  * useQueries 결과 합치기. 모듈 함수(항상 같은 참조)라야 TanStack Query 가 결과가 그대로일 때 이전 값을 돌려준다
  * → 수천 행 배열을 매 렌더 새로 만들지 않아 그리드가 다시 비교하지 않는다. errors.label 은 일단 순번이다
@@ -65,13 +49,12 @@ function combineTrades(results: UseQueryResult<AptTradeResult>[]): AptTradesStat
     isLoading: results.some((r) => r.isLoading),
     isFetching: results.some((r) => r.isFetching),
     errors: results.flatMap((r, i) => (r.error ? [{ label: String(i), message: r.error.message }] : [])),
-    fromDb: results.filter((r) => r.data?.source === "db").length,
-    warnings: [...new Set(results.flatMap((r) => (r.data?.warning ? [r.data.warning] : [])))],
+    notLoaded: results.filter((r) => r.data?.status === "not_loaded").length,
   };
 }
 
 /**
- * 여러 구 × 여러 월을 한 번씩 따로 조회해 합친다(API 가 구·월 단위라서). 서버는 Supabase 에 저장된 자료를 먼저 쓴다.
+ * 여러 구 × 여러 월을 한 번씩 따로 조회해 합친다(API 가 구·월 단위라서). 서버는 loader 가 Supabase 에 받아 둔 자료만 돌려준다.
  * 구·월 단위로 캐시하므로 다시 고른 구는 다시 부르지 않는다.
  */
 export function useAptTrades(districts: string[], months: string[]): AptTradesState {
@@ -89,7 +72,7 @@ export function useAptTrades(districts: string[], months: string[]): AptTradesSt
   return { ...state, errors: state.errors.map((e) => ({ ...e, label: pairs[Number(e.label)] ? `${pairs[Number(e.label)].district} ${pairs[Number(e.label)].ym}` : e.label })) };
 }
 
-/** 단지별 연도 추이. 과거 자료를 처음 채울 때는 오래 걸리므로 결과를 오래 캐시한다 */
+/** 단지별 연도 추이(DB 에 받아 둔 자료로 계산) */
 export function useAptTrend(params: { district: string; aptSeq: string; from: number; to: number; area: number | null } | null) {
   return useQuery({
     queryKey: ["molit", "apt-trend", params],

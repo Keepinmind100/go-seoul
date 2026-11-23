@@ -150,7 +150,7 @@ export function TrendPanel({ apt }: { apt: { district: string; aptSeq: string; a
         <ErrorText error={trend.error} />
         {trend.isFetching ? (
           <p className="py-24 text-center text-sm text-slate-500">
-            불러오는 중… 처음 보는 기간은 국토교통부에서 구 전체 자료를 받아 저장하느라 1분 가까이 걸릴 수 있습니다. 한 번 받은 기간은 바로 나옵니다.
+            불러오는 중…
           </p>
         ) : data && data.years.some((y) => y.count) ? (
           <TrendChart years={data.years} selected={picked} onSelect={setPicked} />
@@ -160,10 +160,10 @@ export function TrendPanel({ apt }: { apt: { district: string; aptSeq: string; a
         {data && !trend.isFetching && data.years.some((y) => y.count) && !picked && (
           <p className="text-center text-xs text-slate-500">그래프에서 연도를 누르면 그해 거래 목록이 아래에 나옵니다.</p>
         )}
-        {data && data.failedMonths.length > 0 && (
+        {data && data.missingMonths.length > 0 && (
           <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">
-            {data.failedMonths.length}개월은 국토교통부에서 받지 못해 빠졌습니다({data.failedMonths.slice(0, 6).join(", ")}
-            {data.failedMonths.length > 6 && " …"}). 잠시 뒤 다시 열면 채웁니다.
+            {data.missingMonths.length}개월은 아직 받아 두지 않아 빠졌습니다({data.missingMonths.slice(0, 6).join(", ")}
+            {data.missingMonths.length > 6 && " …"}). 과거 자료는 매일 새벽 4시에 며칠에 걸쳐 차례로 채웁니다.
           </p>
         )}
       </Card>
