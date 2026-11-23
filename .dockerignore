@@ -1,0 +1,27 @@
+# 빌드 맥락에서 뺄 것: 로컬 의존성·빌드 결과·비밀값·도구 상태
+node_modules
+.next
+out
+coverage
+test-results
+playwright-report
+.playwright-mcp
+.omc
+.local-db
+.git
+.vercel
+*.tsbuildinfo
+next-env.d.ts
+npm-debug.log*
+
+# .env.local 이 이미지에 섞이지 않게 한다(값은 build arg · 실행 환경변수로만 넘긴다)
+.env*
+!.env.example
+
+# Supabase CLI 로컬 상태
+supabase/.temp
+supabase/.branches
+
+Dockerfile
+.dockerignore
+docker-compose.yml
