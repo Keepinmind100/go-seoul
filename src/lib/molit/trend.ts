@@ -17,8 +17,18 @@ export function yearMonths(fromYear: number, toYear: number, now = new Date()): 
   return out;
 }
 
+/** 이번 달부터 거슬러 n개월(이번 달 포함)의 YYYYMM 목록, 오래된 달부터 */
+export function recentMonths(n: number, now = new Date()): string[] {
+  const out: string[] = [];
+  for (let i = n - 1; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    out.push(`${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}`);
+  }
+  return out;
+}
+
 /** 아직 없거나 오래된 구·월만 국토교통부에서 받아 DB 에 넣는다 */
-async function ensureMonths(db: SupabaseClient, district: SeoulDistrict, yms: string[]) {
+export async function ensureMonths(db: SupabaseClient, district: SeoulDistrict, yms: string[]) {
   const { data, error } = await db.from("apt_trade_loads").select("ym, loaded_at").eq("district", district).in("ym", yms);
   if (error) throw new Error(`실거래가 DB 읽기 실패: ${error.message}`);
   const loadedAt = new Map((data ?? []).map((r) => [r.ym as string, r.loaded_at as string]));

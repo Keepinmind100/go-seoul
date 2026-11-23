@@ -91,11 +91,11 @@ const COLUMNS: ColDef<YearRow>[] = [
   },
 ];
 
-export function TrendPanel({ apt }: { apt: { district: string; aptSeq: string; aptName: string } | null }) {
+export function TrendPanel({ apt, initialArea = null }: { apt: { district: string; aptSeq: string; aptName: string } | null; initialArea?: number | null }) {
   const thisYear = new Date().getFullYear();
   const [from, setFrom] = useState(thisYear - 9);
   const [to, setTo] = useState(thisYear);
-  const [area, setArea] = useState<number | null>(null);
+  const [area, setArea] = useState<number | null>(initialArea);
   /** 그래프에서 누른 연도 */
   const [picked, setPicked] = useState<number | null>(null);
   const yearError = from > to ? "시작 연도가 끝 연도보다 늦습니다" : to - from + 1 > MAX_YEARS ? `최대 ${MAX_YEARS}년까지 볼 수 있습니다` : null;

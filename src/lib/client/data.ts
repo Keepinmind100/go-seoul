@@ -11,6 +11,10 @@ export interface Favorite {
   district: string;
   address: string | null;
   memo: string | null;
+  /** 실거래 단지 일련번호(apt_trades.apt_seq). 없으면 시세 연결 안 됨 */
+  apt_seq: string | null;
+  /** 관심 전용면적(반올림 ㎡). 없으면 전체 면적으로 시세를 본다 */
+  area_m2: number | null;
   created_at: string;
 }
 
@@ -42,7 +46,7 @@ export interface Asset {
   updated_at: string;
 }
 
-export type FavoriteInput = Pick<Favorite, "name" | "district" | "address" | "memo">;
+export type FavoriteInput = Pick<Favorite, "name" | "district" | "address" | "memo" | "apt_seq" | "area_m2">;
 export type VisitInput = Omit<Visit, "id" | "created_at">;
 export type AssetInput = Pick<Asset, "category" | "name" | "owner" | "amount_manwon" | "memo">;
 
@@ -50,6 +54,7 @@ type Table = "favorites" | "visits" | "assets";
 
 /** Supabase 오류를 그대로 던진다(PostgrestError 는 Error 가 아니라 메시지를 감싼다) */
 function unwrap<T>({ data, error }: { data: T | null; error: { message: string; code?: string } | null }): T {
+  if (error?.code === "23505") throw new Error("이미 등록된 항목입니다 (같은 구에 같은 이름의 관심 단지가 있음)");
   if (error) throw new Error(error.code ? `${error.message} (${error.code})` : error.message);
   return data as T;
 }
